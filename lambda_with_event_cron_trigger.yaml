@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: An AWS Serverless Specification template describing your function.
+
+Parameters:
+  ScheduleParameter:
+    Type: String
+    Default: cron(0 9 ? * MON,THU *)
+    Description: Default is cron(0 9 ? * MON,THU *), edit schedule as needed.
+Resources:
+  function-name:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: function-name
+      CodeUri: s3://bucket/home/function-name/function-name.zip
+      Description: ''
+      MemorySize: 256
+      Timeout: 60
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      Architectures:
+      - x86_64
+      EventInvokeConfig:
+        MaximumEventAgeInSeconds: 21600
+        MaximumRetryAttempts: 2
+      EphemeralStorage:
+        Size: 512
+      Environment:
+        Variables:
+          BUCKET: bucket
+          BUCKET2: bucket2
+          DB_SERVER: db_server
+          JAVA_HOME: /opt/java
+          SECRET: secret/name
+      Layers:
+      - arn:aws:lambda:us-west-2:[account]:layer:jaydebeapi:4
+      - arn:aws:lambda:us-west-2:[account]:layer:jvm:3
+      Role: arn:aws:iam::[account]:role/service-role/iam-role-name
+      SnapStart:
+        ApplyOn: None
+      PackageType: Zip
+      VpcConfig:
+        SecurityGroupIds:
+        - sg-xxxxxxxxxxxxxx
+        SubnetIds:
+        - subnet-xxxxxxxxxxxxxx
+      Events:
+        MyEventTrigger:
+          Type: Schedule
+          Properties:
+            Name: MyEventTrigger
+            State: ENABLED
+            Description: EventBridge scheduled trigger for the lambda function
+            Schedule: !Ref ScheduleParameter
